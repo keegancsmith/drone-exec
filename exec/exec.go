@@ -3,6 +3,7 @@ package exec
 import (
 	"fmt"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 
@@ -169,7 +170,11 @@ func Exec(payload Payload, opt Options, outw, errw io.Writer) error {
 	}
 	r := runner.Load(tree)
 
-	client, err := dockerclient.NewDockerClient("unix:///var/run/docker.sock", nil)
+	daemonURL := os.Getenv("DOCKER_HOST")
+	if daemonURL == "" {
+		daemonURL = "unix:///var/run/docker.sock"
+	}
+	client, err := dockerclient.NewDockerClient(daemonURL, nil)
 	if err != nil {
 		return err
 	}
