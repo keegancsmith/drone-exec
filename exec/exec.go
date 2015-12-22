@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"os"
@@ -174,7 +175,14 @@ func Exec(payload Payload, opt Options, outw, errw io.Writer) error {
 	if daemonURL == "" {
 		daemonURL = "unix:///var/run/docker.sock"
 	}
-	client, err := dockerclient.NewDockerClient(daemonURL, nil)
+	var tlsConfig *tls.Config
+	if path := os.Getenv("DOCKER_CERT_PATH"); os.Getenv("DOCKER_TLS_VERIFY") != "" && path != "" {
+		tlsConfig, err = dockerclient.TLSConfigFromCertPath(path)
+		if err != nil {
+			return err
+		}
+	}
+	client, err := dockerclient.NewDockerClient(daemonURL, tlsConfig)
 	if err != nil {
 		return err
 	}
